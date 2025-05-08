@@ -1,9 +1,15 @@
-# Ignore all venv folders at any depth
+# Ignore all virtual environments
 venv/
 **/venv/
 
-# Common ignores
+# Ignore Python cache files
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Ignore macOS files
 .DS_Store
+
+# Ignore temporary files
+*.log
+*.swp
 
