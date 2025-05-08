@@ -1,11 +1,9 @@
-# Ignore venv and temp files
+# Ignore all venv folders at any depth
 venv/
-temp/
+**/venv/
 
-# Ignore system files
-.DS_Store
-
-# Ignore Python bytecode
+# Common ignores
 __pycache__/
 *.pyc
+.DS_Store
 
