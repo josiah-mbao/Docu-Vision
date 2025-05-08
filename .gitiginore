@@ -1,0 +1,11 @@
+# Ignore venv and temp files
+venv/
+temp/
+
+# Ignore system files
+.DS_Store
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+
