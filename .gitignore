@@ -13,3 +13,14 @@ __pycache__/
 *.log
 *.swp
 
+# Temp folders for uploads and OCR
+backend/temp/
+
+# Ignore PDF files
+*.pdf
+
+# Ignore compiled bytecode just in case
+*.pyc
+
+# Ignore Python cache (redundant but harmless)
+__pycache__/

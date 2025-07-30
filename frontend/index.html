@@ -3,30 +3,384 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Document Intelligence</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <title>DocuVision - Document Intelligence</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #4cc9f0;
+      --error: #f72585;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .description {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #6c757d;
+    }
+    
+    .file-upload-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .custom-file-upload {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    
+    .custom-file-upload:hover {
+      background-color: var(--secondary);
+      transform: translateY(-2px);
+    }
+    
+    .custom-file-upload i {
+      margin-right: 8px;
+    }
+    
+    #file-input {
+      display: none;
+    }
+    
+    #preview {
+      margin: 1rem 0;
+      min-height: 150px;
+      border: 2px dashed #dee2e6;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    #preview img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 5px;
+    }
+    
+    .pdf-icon {
+      font-size: 3rem;
+      color: var(--primary);
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      background-color: var(--secondary);
+    }
+    
+    button:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+    }
+    
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: var(--success);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    #status {
+      margin: 1rem 0;
+      padding: 0.5rem;
+      border-radius: 5px;
+      text-align: center;
+    }
+    
+    .success {
+      background-color: rgba(76, 201, 240, 0.2);
+      color: var(--success);
+    }
+    
+    .error {
+      background-color: rgba(247, 37, 133, 0.2);
+      color: var(--error);
+    }
+    
+    #result-container {
+      margin-top: 2rem;
+      display: none;
+    }
+    
+    #result-container h2 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    #extracted-text {
+      white-space: pre-wrap;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 5px;
+      border-left: 4px solid var(--primary);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .actions button {
+      flex: 1;
+    }
+    
+    .copy-btn {
+      background-color: #6c757d;
+    }
+    
+    .copy-btn:hover {
+      background-color: #5a6268;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Document Intelligence API</h1>
-
-    <label for="file-input" class="custom-file-upload">
-      Select Document
-    </label>
-    <input type="file" id="file-input" accept="image/*,.pdf" />
-
-    <div id="preview"></div>
-
-    <button onclick="uploadDocument()">Upload</button>
-
+    <h1><i class="fas fa-file-alt"></i> DocuVision</h1>
+    <p class="description">Upload documents to extract text using AI-powered OCR</p>
+    
+    <div class="file-upload-wrapper">
+      <label for="file-input" class="custom-file-upload">
+        <i class="fas fa-cloud-upload-alt"></i> Choose Document (PDF/Image)
+      </label>
+      <input type="file" id="file-input" accept="image/*,.pdf" />
+      
+      <div id="preview">
+        <i class="fas fa-file-upload" style="font-size: 3rem; color: #adb5bd;"></i>
+        <p>No document selected</p>
+      </div>
+    </div>
+    
+    <button onclick="uploadDocument()" id="upload-btn">
+      <i class="fas fa-upload"></i> Process Document
+    </button>
+    
     <div class="progress-bar-container" id="progress-container" style="display: none;">
       <div class="progress-bar" id="progress-bar"></div>
     </div>
-
-    <p id="status">Status: Waiting for upload...</p>
+    
+    <p id="status">Status: Ready to upload</p>
+    
+    <div id="result-container">
+      <h2><i class="fas fa-file-contract"></i> Extracted Text</h2>
+      <div id="extracted-text"></div>
+      
+      <div class="actions">
+        <button class="copy-btn" onclick="copyToClipboard()">
+          <i class="far fa-copy"></i> Copy Text
+        </button>
+        <button onclick="clearAll()">
+          <i class="fas fa-redo"></i> Process Another
+        </button>
+      </div>
+    </div>
   </div>
 
-  <script src="/static/script.js"></script>
+  <script>
+    // Enhanced version of the JavaScript I provided earlier
+    const fileInput = document.getElementById("file-input");
+    const preview = document.getElementById("preview");
+    const statusText = document.getElementById("status");
+    const progressBar = document.getElementById("progress-bar");
+    const progressContainer = document.getElementById("progress-container");
+    const resultContainer = document.getElementById("result-container");
+    const extractedText = document.getElementById("extracted-text");
+    const uploadBtn = document.getElementById("upload-btn");
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      preview.innerHTML = "";
+      resultContainer.style.display = "none";
+      
+      const fileType = file.type;
+      const previewText = document.createElement("p");
+      previewText.textContent = file.name;
+
+      if (fileType.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        preview.appendChild(img);
+      } else if (fileType === "application/pdf") {
+        const pdfIcon = document.createElement("div");
+        pdfIcon.className = "pdf-icon";
+        pdfIcon.innerHTML = '<i class="fas fa-file-pdf"></i>';
+        preview.appendChild(pdfIcon);
+      }
+      
+      preview.appendChild(previewText);
+      uploadBtn.disabled = false;
+    });
+
+    async function uploadDocument() {
+      const file = fileInput.files[0];
+      if (!file) {
+        updateStatus("Please select a file first", "error");
+        return;
+      }
+
+      // Validate file size (1MB limit for OCR.space free tier)
+      if (file.size > 1000000) {
+        updateStatus("File too large (max 1MB)", "error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      updateStatus("Processing document...", "");
+      progressBar.style.width = "0%";
+      progressContainer.style.display = "block";
+      uploadBtn.disabled = true;
+
+      try {
+        // Simulate progress for better UX (OCR.space doesn't provide upload progress)
+        simulateProgress();
+        
+        const response = await fetch("/upload/", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || "Failed to process document");
+        }
+
+        const data = await response.json();
+        
+        // Update UI with results
+        updateStatus("Processing complete!", "success");
+        extractedText.textContent = data.text || "No text could be extracted";
+        resultContainer.style.display = "block";
+        
+      } catch (error) {
+        updateStatus(error.message || "Error processing document", "error");
+        console.error("Processing error:", error);
+      } finally {
+        progressContainer.style.display = "none";
+        uploadBtn.disabled = false;
+      }
+    }
+
+    function updateStatus(message, type) {
+      statusText.textContent = `Status: ${message}`;
+      statusText.className = type;
+    }
+
+    function simulateProgress() {
+      let width = 0;
+      const interval = setInterval(() => {
+        if (width >= 90) {
+          clearInterval(interval);
+          return;
+        }
+        width += 10;
+        progressBar.style.width = width + "%";
+      }, 300);
+    }
+
+    function copyToClipboard() {
+      navigator.clipboard.writeText(extractedText.textContent)
+        .then(() => {
+          const copyBtn = document.querySelector(".copy-btn");
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 2000);
+        })
+        .catch(err => {
+          console.error("Failed to copy: ", err);
+        });
+    }
+
+    function clearAll() {
+      fileInput.value = "";
+      preview.innerHTML = '<i class="fas fa-file-upload" style="font-size: 3rem; color: #adb5bd;"></i><p>No document selected</p>';
+      resultContainer.style.display = "none";
+      updateStatus("Ready to upload", "");
+      uploadBtn.disabled = true;
+    }
+  </script>
 </body>
 </html>
-

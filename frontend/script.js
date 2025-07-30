@@ -3,9 +3,12 @@ const preview = document.getElementById("preview");
 const statusText = document.getElementById("status");
 const progressBar = document.getElementById("progress-bar");
 const progressContainer = document.getElementById("progress-container");
+const resultContainer = document.getElementById("result-container"); // Add this element in your HTML
+const extractedText = document.getElementById("extracted-text"); // Add this element in your HTML
 
 fileInput.addEventListener("change", () => {
   preview.innerHTML = ""; // Clear previous preview
+  resultContainer.style.display = "none"; // Hide results when new file selected
   const file = fileInput.files[0];
   if (!file) return;
 
@@ -35,44 +38,53 @@ async function uploadDocument() {
     return;
   }
 
+  // Validate file size (OCR.space free tier has 1MB limit)
+  if (file.size > 1000000) {
+    statusText.textContent = "File too large (max 1MB for free tier)";
+    return;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
-  statusText.textContent = "Uploading...";
+  statusText.textContent = "Processing document...";
   progressBar.style.width = "0%";
   progressContainer.style.display = "block";
+  resultContainer.style.display = "none";
 
   try {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/upload/", true);
+    const response = await fetch("/upload/", {
+      method: "POST",
+      body: formData
+    });
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        progressBar.style.width = percent + "%";
-      }
-    };
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to process document");
+    }
 
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        statusText.textContent = response.message || "Upload successful!";
-      } else {
-        statusText.textContent = "Error uploading document.";
-      }
-      progressContainer.style.display = "none";
-    };
-
-    xhr.onerror = () => {
-      statusText.textContent = "Upload failed.";
-      progressContainer.style.display = "none";
-    };
-
-    xhr.send(formData);
+    const data = await response.json();
+    
+    // Update UI with results
+    statusText.textContent = data.message || "Processing complete!";
+    extractedText.textContent = data.text || "No text could be extracted";
+    resultContainer.style.display = "block";
+    
+    // Optional: Format text (preserve line breaks)
+    extractedText.innerHTML = data.text.replace(/\n/g, "<br>");
+    
   } catch (error) {
-    statusText.textContent = "Error uploading document.";
+    statusText.textContent = error.message || "Error processing document";
+    console.error("Processing error:", error);
+  } finally {
     progressContainer.style.display = "none";
-    console.error(error);
   }
 }
 
+// Add this to your HTML:
+/*
+<div id="result-container" style="display: none; margin-top: 20px;">
+  <h3>Extracted Text:</h3>
+  <div id="extracted-text" style="white-space: pre-wrap; background: #f5f5f5; padding: 10px; border-radius: 5px;"></div>
+</div>
+*/
