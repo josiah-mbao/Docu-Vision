@@ -9,9 +9,10 @@
 
 ---
 
-<img width="1552" alt="Screenshot 2025-05-08 at 20 27 49" src="https://github.com/user-attachments/assets/e44b167c-1a62-4298-9a15-8d45b89460f6" />
+<img width="1440" height="900" alt="Screenshot 2025-08-07 at 01 53 53" src="https://github.com/user-attachments/assets/8d344734-ffe8-4a86-87fb-696894a65f7d" />
 
 ---
+
 
 ## 📄 About
 
