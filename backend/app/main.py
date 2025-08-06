@@ -116,16 +116,16 @@ async def upload_document(
 
         # Optional: Summarize using OpenRouter
         openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        summary = None
+        analysis_result = None
         if openrouter_api_key:
-            summary = await summarize_with_openrouter(
+            analysis_result = await analyze_document_with_openrouter(
                 extracted_text, openrouter_api_key)
 
         return JSONResponse(
             content={
                 "message": "Document processed successfully!",
-                "text": extracted_text,
-                "summary": summary,
+                "ocr_text": extracted_text,
+                "analysis": analysis_result,
                 "filename": file.filename
             }
         )
@@ -150,39 +150,83 @@ async def process_document(
     return await upload_document(background_tasks, file, ocr_api_key)
 
 
-async def summarize_with_openrouter(ocr_text: str, openrouter_api_key: str) -> str:
+async def analyze_document_with_openrouter(ocr_text: str, openrouter_api_key: str) -> dict:
     """
-    Send OCR text to OpenRouter API for summarization or Q&A
+    Analyze document using OpenRouter API with smart prompt that:
+    - Detects document type
+    - Returns summary
+    - Returns structured fields based on document type
     """
     headers = {
         "Authorization": f"Bearer {openrouter_api_key}",
         "Content-Type": "application/json",
     }
 
+    prompt = f"""
+You are an intelligent document processing assistant.
+
+Given the text extracted from a document, do the following:
+
+1. Determine the document type. It could be one of: "invoice", "receipt", "resume", "letter", "email", "ID", or "other".
+2. Provide a short summary of the document.
+3. Extract relevant structured data depending on the document type.
+4. Respond in this JSON format:
+
+{{
+  "document_type": "...",
+  "summary": "...",
+  "extracted_data": {{
+    // structured key-value pairs
+  }}
+}}
+
+Here is the OCR text:
+\"\"\"{ocr_text}\"\"\"
+"""
+
     payload = {
-        "model": "openai/gpt-3.5-turbo",  # You can replace with other models
+        "model": "mistralai/mistral-7b-instruct",
         "messages": [
             {
                 "role": "system",
-                "content": "You are a helpful assistant that summarizes documents."
+                "content": "You are a helpful assistant that analyzes documents."
             },
             {
                 "role": "user",
-                "content": f"Please summarize the following document:\n\n{ocr_text}"
+                "content": prompt
             }
         ],
-        "temperature": 0.7
+        "temperature": 0.5
     }
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
             response.raise_for_status()
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            raw_output = data["choices"][0]["message"]["content"]
+
+            # Try parsing the returned string as JSON
+            import json
+            try:
+                return json.loads(raw_output)
+            except json.JSONDecodeError:
+                logger.warning("Model response is not valid JSON. Returning raw text.")
+                return {
+                    "document_type": "unknown",
+                    "summary": "AI returned unstructured data",
+                    "extracted_data": {
+                        "raw_response": raw_output
+                    }
+                }
+
     except httpx.HTTPStatusError as e:
         logger.error(f"OpenRouter API error: {e}")
         raise HTTPException(status_code=502, detail="OpenRouter API error")
     except Exception as e:
-        logger.error(f"Error summarizing document: {e}")
-        raise HTTPException(status_code=500, detail="Failed to summarize text")
+        logger.error(f"Error analyzing document: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze document")
