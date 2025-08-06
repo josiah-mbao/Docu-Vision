@@ -114,10 +114,18 @@ async def upload_document(
         api_key = ocr_api_key or "helloworld"  # Default to free public key
         extracted_text = await ocr_space_extract(file_location, api_key)
 
+        # Optional: Summarize using OpenRouter
+        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        summary = None
+        if openrouter_api_key:
+            summary = await summarize_with_openrouter(
+                extracted_text, openrouter_api_key)
+
         return JSONResponse(
             content={
                 "message": "Document processed successfully!",
                 "text": extracted_text,
+                "summary": summary,
                 "filename": file.filename
             }
         )
@@ -140,3 +148,41 @@ async def process_document(
 ):
     """Alternative endpoint that just processes without upload semantics"""
     return await upload_document(background_tasks, file, ocr_api_key)
+
+
+async def summarize_with_openrouter(ocr_text: str, openrouter_api_key: str) -> str:
+    """
+    Send OCR text to OpenRouter API for summarization or Q&A
+    """
+    headers = {
+        "Authorization": f"Bearer {openrouter_api_key}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "openai/gpt-3.5-turbo",  # You can replace with other models
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that summarizes documents."
+            },
+            {
+                "role": "user",
+                "content": f"Please summarize the following document:\n\n{ocr_text}"
+            }
+        ],
+        "temperature": 0.7
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+    except httpx.HTTPStatusError as e:
+        logger.error(f"OpenRouter API error: {e}")
+        raise HTTPException(status_code=502, detail="OpenRouter API error")
+    except Exception as e:
+        logger.error(f"Error summarizing document: {e}")
+        raise HTTPException(status_code=500, detail="Failed to summarize text")

@@ -213,7 +213,7 @@
 </head>
 <body>
   <div class="container">
-    <h1><i class="fas fa-file-alt"></i> DocuVision</h1>
+    <h1><i class="fas fa-file-alt"></i>DocuVision</h1>
     <p class="description">Upload documents to extract text using AI-powered OCR</p>
     
     <div class="file-upload-wrapper">
@@ -241,6 +241,17 @@
     <div id="result-container">
       <h2><i class="fas fa-file-contract"></i> Extracted Text</h2>
       <div id="extracted-text"></div>
+      <h2><i class="fas fa-brain"></i> AI-Generated Summary</h2>
+      <div id="summary-text" style="
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        border-left: 4px solid var(--success);
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+      "></div>
       
       <div class="actions">
         <button class="copy-btn" onclick="copyToClipboard()">
@@ -253,134 +264,7 @@
     </div>
   </div>
 
-  <script>
-    // Enhanced version of the JavaScript I provided earlier
-    const fileInput = document.getElementById("file-input");
-    const preview = document.getElementById("preview");
-    const statusText = document.getElementById("status");
-    const progressBar = document.getElementById("progress-bar");
-    const progressContainer = document.getElementById("progress-container");
-    const resultContainer = document.getElementById("result-container");
-    const extractedText = document.getElementById("extracted-text");
-    const uploadBtn = document.getElementById("upload-btn");
 
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-
-      preview.innerHTML = "";
-      resultContainer.style.display = "none";
-      
-      const fileType = file.type;
-      const previewText = document.createElement("p");
-      previewText.textContent = file.name;
-
-      if (fileType.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        img.onload = () => URL.revokeObjectURL(img.src);
-        preview.appendChild(img);
-      } else if (fileType === "application/pdf") {
-        const pdfIcon = document.createElement("div");
-        pdfIcon.className = "pdf-icon";
-        pdfIcon.innerHTML = '<i class="fas fa-file-pdf"></i>';
-        preview.appendChild(pdfIcon);
-      }
-      
-      preview.appendChild(previewText);
-      uploadBtn.disabled = false;
-    });
-
-    async function uploadDocument() {
-      const file = fileInput.files[0];
-      if (!file) {
-        updateStatus("Please select a file first", "error");
-        return;
-      }
-
-      // Validate file size (1MB limit for OCR.space free tier)
-      if (file.size > 1000000) {
-        updateStatus("File too large (max 1MB)", "error");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      updateStatus("Processing document...", "");
-      progressBar.style.width = "0%";
-      progressContainer.style.display = "block";
-      uploadBtn.disabled = true;
-
-      try {
-        // Simulate progress for better UX (OCR.space doesn't provide upload progress)
-        simulateProgress();
-        
-        const response = await fetch("/upload/", {
-          method: "POST",
-          body: formData
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || "Failed to process document");
-        }
-
-        const data = await response.json();
-        
-        // Update UI with results
-        updateStatus("Processing complete!", "success");
-        extractedText.textContent = data.text || "No text could be extracted";
-        resultContainer.style.display = "block";
-        
-      } catch (error) {
-        updateStatus(error.message || "Error processing document", "error");
-        console.error("Processing error:", error);
-      } finally {
-        progressContainer.style.display = "none";
-        uploadBtn.disabled = false;
-      }
-    }
-
-    function updateStatus(message, type) {
-      statusText.textContent = `Status: ${message}`;
-      statusText.className = type;
-    }
-
-    function simulateProgress() {
-      let width = 0;
-      const interval = setInterval(() => {
-        if (width >= 90) {
-          clearInterval(interval);
-          return;
-        }
-        width += 10;
-        progressBar.style.width = width + "%";
-      }, 300);
-    }
-
-    function copyToClipboard() {
-      navigator.clipboard.writeText(extractedText.textContent)
-        .then(() => {
-          const copyBtn = document.querySelector(".copy-btn");
-          const originalText = copyBtn.innerHTML;
-          copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-          setTimeout(() => {
-            copyBtn.innerHTML = originalText;
-          }, 2000);
-        })
-        .catch(err => {
-          console.error("Failed to copy: ", err);
-        });
-    }
-
-    function clearAll() {
-      fileInput.value = "";
-      preview.innerHTML = '<i class="fas fa-file-upload" style="font-size: 3rem; color: #adb5bd;"></i><p>No document selected</p>';
-      resultContainer.style.display = "none";
-      updateStatus("Ready to upload", "");
-      uploadBtn.disabled = true;
-    }
-  </script>
+  <script src="/static/script.js"></script>
 </body>
 </html>
