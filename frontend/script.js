@@ -67,19 +67,17 @@ const fileInput = document.getElementById("file-input");
         
         // Update UI with results
         statusText.textContent = data.message || "Processing complete!";
-        extractedText.innerHTML = data.text?.replace(/\n/g, "<br>") || "No text could be extracted";
+        extractedText.innerHTML = data.ocr_text?.replace(/\n/g, "<br>") || "No text could be extracted";
 
         const summaryDiv = document.getElementById("summary-text");
-        if (data.summary) {
-          summaryDiv.innerHTML = data.summary.replace(/\n/g, "<br>");
+        if (data.analysis?.summary) {
+          summaryDiv.innerHTML = data.analysis.summary.replace(/\n/g, "<br>");
         } else {
           summaryDiv.textContent = "No summary generated.";
         }
 
         resultContainer.style.display = "block";
-        
-        // Optional: Format text (preserve line breaks)
-        extractedText.innerHTML = data.text.replace(/\n/g, "<br>");
+
         
       } catch (error) {
         statusText.textContent = error.message || "Error processing document";
