@@ -1,96 +1,201 @@
+// DOM Elements
 const fileInput = document.getElementById("file-input");
-    const preview = document.getElementById("preview");
-    const statusText = document.getElementById("status");
-    const progressBar = document.getElementById("progress-bar");
-    const progressContainer = document.getElementById("progress-container");
-    const resultContainer = document.getElementById("result-container"); // Add this element in your HTML
-    const extractedText = document.getElementById("extracted-text"); // Add this element in your HTML
+const preview = document.getElementById("preview");
+const statusText = document.getElementById("status");
+const progressBar = document.getElementById("progress-bar");
+const progressContainer = document.getElementById("progress-container");
+const resultContainer = document.getElementById("result-container");
+const extractedText = document.getElementById("extracted-text");
+const summaryText = document.getElementById("summary-text");
+const uploadBtn = document.getElementById("upload-btn");
 
-    fileInput.addEventListener("change", () => {
-      preview.innerHTML = ""; // Clear previous preview
-      resultContainer.style.display = "none"; // Hide results when new file selected
-      const file = fileInput.files[0];
-      if (!file) return;
+// Toast notification
+function showToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add("show");
+  }, 100);
+  
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
 
-      const fileType = file.type;
+// File input handler
+fileInput.addEventListener("change", handleFileSelect);
 
-      if (fileType.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        img.onload = () => URL.revokeObjectURL(img.src); // Clean up memory
-        preview.appendChild(img);
-      } else if (fileType === "application/pdf") {
-        const pdfIcon = document.createElement("div");
-        pdfIcon.className = "pdf-icon";
-        pdfIcon.textContent = "📄 PDF Selected";
-        preview.appendChild(pdfIcon);
-      } else {
-        const message = document.createElement("p");
-        message.textContent = "Unsupported file type.";
-        preview.appendChild(message);
-      }
+function handleFileSelect() {
+  preview.innerHTML = "";
+  resultContainer.style.display = "none";
+  statusText.textContent = "Status: Ready to upload";
+  statusText.className = "";
+  
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const fileType = file.type;
+  const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+  // File size validation
+  if (file.size > 10 * 1024 * 1024) { // 10MB
+    statusText.textContent = `File too large (${fileSizeMB}MB). Max 10MB allowed.`;
+    statusText.className = "error";
+    fileInput.value = "";
+    return;
+  }
+
+  // File type validation
+  const validTypes = ["image/jpeg", "image/png", "application/pdf"];
+  if (!validTypes.includes(fileType)) {
+    statusText.textContent = "Unsupported file type. Please upload JPEG, PNG, or PDF.";
+    statusText.className = "error";
+    fileInput.value = "";
+    return;
+  }
+
+  // Preview
+  if (fileType.startsWith("image/")) {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    img.alt = "Document preview";
+    img.onload = () => URL.revokeObjectURL(img.src);
+    preview.appendChild(img);
+  } else if (fileType === "application/pdf") {
+    const pdfIcon = document.createElement("div");
+    pdfIcon.className = "pdf-icon";
+    pdfIcon.innerHTML = '<i class="fas fa-file-pdf"></i>';
+    const fileName = document.createElement("p");
+    fileName.textContent = file.name;
+    preview.appendChild(pdfIcon);
+    preview.appendChild(fileName);
+  }
+
+  statusText.textContent = `Ready: ${file.name} (${fileSizeMB}MB)`;
+  statusText.className = "success";
+}
+
+// Upload document
+async function uploadDocument() {
+  const file = fileInput.files[0];
+  if (!file) {
+    showToast("Please select a file first", "error");
+    return;
+  }
+
+  // UI state
+  uploadBtn.setAttribute("aria-busy", "true");
+  uploadBtn.disabled = true;
+  statusText.textContent = "Processing document...";
+  statusText.className = "";
+  progressBar.style.width = "0%";
+  progressContainer.style.display = "block";
+  resultContainer.style.display = "none";
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Simulate progress for better UX
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      progress += 5;
+      progressBar.style.width = `${Math.min(progress, 90)}%`;
+      if (progress >= 90) clearInterval(progressInterval);
+    }, 200);
+
+    const response = await fetch("/api/upload/", {
+      method: "POST",
+      body: formData
     });
 
-    async function uploadDocument() {
-      const file = fileInput.files[0];
-      if (!file) {
-        alert("Please select a file first.");
-        return;
-      }
+    clearInterval(progressInterval);
+    progressBar.style.width = "100%";
 
-      // Validate file size (OCR.space free tier has 1MB limit)
-      if (file.size > 1000000) {
-        statusText.textContent = "File too large (max 1MB for free tier)";
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      statusText.textContent = "Processing document...";
-      progressBar.style.width = "0%";
-      progressContainer.style.display = "block";
-      resultContainer.style.display = "none";
-
-      try {
-        const response = await fetch("/upload/", {
-          method: "POST",
-          body: formData
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || "Failed to process document");
-        }
-
-        const data = await response.json();
-        
-        // Update UI with results
-        statusText.textContent = data.message || "Processing complete!";
-        extractedText.innerHTML = data.ocr_text?.replace(/\n/g, "<br>") || "No text could be extracted";
-
-        const summaryDiv = document.getElementById("summary-text");
-        if (data.analysis?.summary) {
-          summaryDiv.innerHTML = data.analysis.summary.replace(/\n/g, "<br>");
-        } else {
-          summaryDiv.textContent = "No summary generated.";
-        }
-
-        resultContainer.style.display = "block";
-
-        
-      } catch (error) {
-        statusText.textContent = error.message || "Error processing document";
-        console.error("Processing error:", error);
-      } finally {
-        progressContainer.style.display = "none";
-      }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || "Failed to process document");
     }
 
-    // Add this to your HTML:
-    /*
-    <div id="result-container" style="display: none; margin-top: 20px;">
-      <h3>Extracted Text:</h3>
-      <div id="extracted-text" style="white-space: pre-wrap; background: #f5f5f5; padding: 10px; border-radius: 5px;"></div>
-    </div>
-    */
+    const data = await response.json();
+    
+    // Update UI with results
+    statusText.textContent = data.message || "Processing complete!";
+    statusText.className = "success";
+    
+    extractedText.textContent = data.data?.ocr_text || "No text could be extracted";
+    summaryText.textContent = data.data?.analysis?.summary || "No summary generated.";
+    
+    resultContainer.style.display = "block";
+    showToast("Document processed successfully!");
+
+  } catch (error) {
+    console.error("Processing error:", error);
+    statusText.textContent = error.message || "Error processing document";
+    statusText.className = "error";
+    showToast(error.message || "Error processing document", "error");
+  } finally {
+    uploadBtn.removeAttribute("aria-busy");
+    uploadBtn.disabled = false;
+    setTimeout(() => {
+      progressContainer.style.display = "none";
+    }, 500);
+  }
+}
+
+// Copy to clipboard
+function copyToClipboard() {
+  const textToCopy = extractedText.textContent;
+  if (!textToCopy) return;
+
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    const copyBtn = document.querySelector(".copy-btn");
+    copyBtn.classList.add("copied");
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    showToast("Text copied to clipboard");
+    
+    setTimeout(() => {
+      copyBtn.classList.remove("copied");
+      copyBtn.innerHTML = '<i class="far fa-copy"></i> Copy Text';
+    }, 2000);
+  }).catch(err => {
+    console.error("Failed to copy text: ", err);
+    showToast("Failed to copy text", "error");
+  });
+}
+
+// Clear all and reset
+function clearAll() {
+  fileInput.value = "";
+  preview.innerHTML = '<i class="fas fa-file-upload"></i><p>No document selected</p>';
+  resultContainer.style.display = "none";
+  statusText.textContent = "Status: Ready to upload";
+  statusText.className = "";
+}
+
+// Event listeners
+uploadBtn.addEventListener("click", uploadDocument);
+
+// Keyboard accessibility
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && document.activeElement === uploadBtn) {
+    uploadDocument();
+  }
+});
+
+// Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js').then(registration => {
+      console.log('ServiceWorker registration successful');
+    }).catch(err => {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}

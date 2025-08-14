@@ -3,66 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="DocuVision - AI-powered document processing">
+  <meta name="theme-color" content="#00c853">
   <title>DocuVision - Document Intelligence</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/favicon.ico">
 </head>
 <body>
   <div class="container">
-    <h1><i class="fas fa-file-alt"></i>DocuVision</h1>
-    <p class="description">Upload documents to extract text using AI-powered OCR</p>
+    <header class="app-header">
+      <h1><i class="fas fa-file-alt"></i>DocuVision</h1>
+      <p class="description">Upload documents to extract text using AI-powered OCR</p>
+    </header>
     
-    <div class="file-upload-wrapper">
-      <label for="file-input" class="custom-file-upload">
-        <i class="fas fa-cloud-upload-alt"></i> Choose Document (PDF/Image)
-      </label>
-      <input type="file" id="file-input" accept="image/*,.pdf" />
-      
-      <div id="preview">
-        <i class="fas fa-file-upload" style="font-size: 3rem; color: #adb5bd;"></i>
-        <p>No document selected</p>
+    <main>
+      <div class="file-upload-wrapper">
+        <label for="file-input" class="custom-file-upload">
+          <i class="fas fa-cloud-upload-alt"></i> Choose Document (PDF/Image)
+        </label>
+        <input type="file" id="file-input" accept="image/*,.pdf" aria-label="Select document to upload" />
+        
+        <div id="preview" role="region" aria-live="polite">
+          <i class="fas fa-file-upload" style="font-size: 3rem; color: #adb5bd;"></i>
+          <p>No document selected</p>
+        </div>
       </div>
-    </div>
-    
-    <button onclick="uploadDocument()" id="upload-btn">
-      <i class="fas fa-upload"></i> Process Document
-    </button>
-    
-    <div class="progress-bar-container" id="progress-container" style="display: none;">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
-    
-    <p id="status">Status: Ready to upload</p>
-    
-    <div id="result-container">
-      <h2><i class="fas fa-file-contract"></i> Extracted Text</h2>
-      <div id="extracted-text"></div>
-      <h2><i class="fas fa-brain"></i> AI-Generated Summary</h2>
-      <div id="summary-text" style="
-        white-space: pre-wrap;
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 5px;
-        border-left: 4px solid var(--success);
-        max-height: 300px;
-        overflow-y: auto;
-        margin-bottom: 1rem;
-      "></div>
       
-      <div class="actions">
-        <button class="copy-btn" onclick="copyToClipboard()">
-          <i class="far fa-copy"></i> Copy Text
-        </button>
-        <button onclick="clearAll()">
-          <i class="fas fa-redo"></i> Process Another
-        </button>
+      <button id="upload-btn" aria-busy="false">
+        <i class="fas fa-upload"></i> Process Document
+      </button>
+      
+      <div class="progress-bar-container" id="progress-container" style="display: none;">
+        <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
-    </div>
+      
+      <p id="status" role="status">Status: Ready to upload</p>
+      
+      <div id="result-container" aria-live="polite">
+        <section>
+          <h2><i class="fas fa-file-contract"></i> Extracted Text</h2>
+          <div id="extracted-text" class="text-output"></div>
+        </section>
+        
+        <section>
+          <h2><i class="fas fa-brain"></i> AI-Generated Summary</h2>
+          <div id="summary-text" class="summary-box"></div>
+        </section>
+        
+        <div class="actions">
+          <button class="copy-btn" onclick="copyToClipboard()" aria-label="Copy extracted text">
+            <i class="far fa-copy"></i> Copy Text
+          </button>
+          <button onclick="clearAll()" aria-label="Clear and start over">
+            <i class="fas fa-redo"></i> Process Another
+          </button>
+        </div>
+      </div>
+    </main>
   </div>
 
-
-  <script src="/static/script.js"></script>
+  <script src="/static/script.js" defer></script>
   <link rel="stylesheet" href="/static/style.css">
 
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js').then(registration => {
+          console.log('ServiceWorker registration successful');
+        }).catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
