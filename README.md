@@ -1,61 +1,91 @@
-# Docu Vision 🧠📄
+# DocuVision 🧠📄 - AI Document Processing
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-1E1E2D?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai)
+[![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![Cloud Functions](https://img.shields.io/badge/GCP%20Cloud%20Functions-7956E6?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/functions)
 
 ---
 
-<img width="846" height="514" alt="Screenshot 2025-08-07 at 01 57 10" src="https://github.com/user-attachments/assets/497c3d82-f396-4d54-92c3-5df37fc0e249" />
+![DocuVision Screenshot](https://github.com/user-attachments/assets/497c3d82-f396-4d54-92c3-5df37fc0e249)
 
 ---
-
 
 ## 📄 About
 
-**Docu Vision** is a lightweight document intelligence API that extracts structured data from scanned documents using **Google's Document AI**. It is ideal for automating tasks like invoice parsing, form digitization, and general OCR-powered processing.
+**DocuVision** is an AI-powered document processing system that combines OCR extraction with intelligent document analysis. It uses **OCR.space** for text extraction and **OpenRouter AI** for document understanding, classification, and data structuring. The application is built with production-ready practices including rate limiting, API security, and PWA support.
+
+Key Improvements:
+- 🛡️ Added API security and rate limiting
+- 📱 Enhanced mobile experience with PWA support
+- 🧠 Smarter document analysis with AI classification
+- ⚡ Optimized performance with GZip compression
+- 🎨 Improved UI/UX with better feedback systems
 
 ---
 
 ## 🧠 Core Features
 
-- 📤 **Document Upload**: Upload PDFs and images via a simple frontend or REST API.
-- 🔎 **OCR + Data Extraction**: Uses Google Document AI for accurate text parsing and structuring.
-- ⚡ **Real-Time Output**: JSON results returned for easy backend consumption.
-- 🖥️ **Web Interface**: Simple, responsive HTML/JS frontend served via FastAPI.
-- 🔁 **Event-driven Processing**: GCP Cloud Function auto-triggers on file upload to GCS.
+### Document Processing
+- 📤 **Multi-format Upload**: Supports PDFs, JPEG, PNG (up to 10MB)
+- 🔍 **Advanced OCR**: OCR.space integration with fallback handling
+- 🧠 **AI Analysis**: Document classification and data extraction via OpenRouter
+- 📊 **Structured Output**: Clean JSON responses with typed fields
+
+### Technical Features
+- ⚡ **Production-Ready API**: Rate limiting, error handling, and docs
+- 🔒 **Optional API Key Security**: Protect your endpoints
+- 📱 **PWA Support**: Installable and works offline
+- 📈 **Progress Tracking**: Real-time upload and processing feedback
+- 🖨️ **Print Styles**: Document-friendly print output
+
+### Developer Experience
+- 📝 **Swagger Docs**: Interactive API documentation at `/api/docs`
+- 🔍 **Validation**: Strict file type and size validation
+- 🧩 **Modular Design**: Clean separation of concerns
+- 📊 **Logging**: Comprehensive request and error logging
 
 ---
 
-## 🌐 Tech Stack
+## 🌐 Enhanced Tech Stack
 
-| Layer        | Tech Used                                                                 |
-|--------------|---------------------------------------------------------------------------|
-| **Frontend** | HTML5, CSS3, JavaScript                                                   |
-| **Backend**  | FastAPI (Python)                                                          |
-| **File Storage** | Google Cloud Storage (GCS)                                            |
-| **Processing** | Google Cloud Function + Document AI                                     |
-| **Authentication** (optional) | Firebase Auth                                            |
-| **Hosting** | FastAPI (locally or via GCP Cloud Run / Functions Framework)              |
+| Component          | Technology                                                                 |
+|--------------------|---------------------------------------------------------------------------|
+| **Frontend**       | HTML5, CSS3, JavaScript (PWA-enabled)                                    |
+| **Backend**        | FastAPI (Python) with Pydantic models                                    |
+| **OCR**           | OCR.space API                                                            |
+| **AI Analysis**    | OpenRouter AI (Mistral 7B)                                               |
+| **Security**       | API Key Auth, Rate Limiting                                              |
+| **Performance**    | GZip Middleware, Async Processing                                       |
+| **DevOps**         | Logging, Error Tracking, Configuration Management                       |
 
 ---
 
 ## ⚙️ Local Setup
 
+### Prerequisites
+- Python 3.9+
+- Node.js (for optional frontend builds)
+- API keys for:
+  - OCR.space (free tier available)
+  - OpenRouter (optional)
+
+### Installation
 ```bash
-# 1. Clone the repository
-git clone https://github.com/josiah-mbao/document-intelligence-api.git
-cd document-intelligence-api
+# Clone the repository
+git clone https://github.com/josiah-mbao/docuvision.git
+cd docuvision
 
-# 2. (Optional) Create and activate a virtual environment
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 3. Install backend dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Run the FastAPI server
-uvicorn main:app --reload
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys
