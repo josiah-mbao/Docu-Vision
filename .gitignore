@@ -24,3 +24,4 @@ backend/temp/
 
 # Ignore Python cache (redundant but harmless)
 __pycache__/
+*.env

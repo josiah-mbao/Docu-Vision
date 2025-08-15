@@ -368,3 +368,70 @@ button[aria-busy="true"]::after {
     margin: 1rem 0;
   }
 }
+
+/* Auth styles */
+.auth-container {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.auth-form h3 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.auth-form input {
+  padding: 0.8rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--dark);
+}
+
+.auth-form button {
+  margin-top: 0;
+}
+
+.user-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: var(--dark);
+}
+
+.logout-btn {
+  background: var(--error);
+  width: auto;
+  padding: 0.5rem 1rem;
+}
+
+.logout-btn:hover {
+  background: #e53935;
+}
+
+/* Hide main content when not authenticated */
+#main-content {
+  display: none;
+}
+
+#main-content.authenticated {
+  display: block;
+}
+
+.auth-forms.authenticated {
+  display: none;
+}
+
+.user-info.authenticated {
+  display: flex;
+}

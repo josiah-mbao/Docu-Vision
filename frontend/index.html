@@ -17,7 +17,32 @@
       <p class="description">Upload documents to extract text using AI-powered OCR</p>
     </header>
     
-    <main>
+    <div class="auth-container" id="auth-container">
+      <div class="user-info" style="display: none;">
+        <span id="user-email"></span>
+        <button id="logout-btn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+      
+      <div class="auth-forms">
+        <form id="login-form" class="auth-form">
+          <h3>Login</h3>
+          <input type="email" id="login-email" placeholder="Email" required>
+          <input type="password" id="login-password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        
+        <form id="register-form" class="auth-form">
+          <h3>Register</h3>
+          <input type="email" id="register-email" placeholder="Email" required>
+          <input type="password" id="register-password" placeholder="Password" required>
+          <button type="submit">Register</button>
+        </form>
+      </div>
+    </div>
+
+    <main id="main-content" style="display: none;">
       <div class="file-upload-wrapper">
         <label for="file-input" class="custom-file-upload">
           <i class="fas fa-cloud-upload-alt"></i> Choose Document (PDF/Image)
@@ -63,7 +88,8 @@
     </main>
   </div>
 
-  <script src="/static/script.js" defer></script>
+  <script type="module" src="/static/auth.js"></script>
+  <script type="module" src="/static/script.js"></script>
   <link rel="stylesheet" href="/static/style.css">
 
   <!-- PWA Service Worker Registration -->
